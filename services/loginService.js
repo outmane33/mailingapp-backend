@@ -66,4 +66,13 @@ const register = expressAsyncHandler(async function (req, res, next) {
   }
 });
 
-module.exports = { login, register };
+const getAllUsers = expressAsyncHandler(async function (req, res, next) {
+  const users = await Login.find({}).exec();
+  if (!users) {
+    return next(new ApiError("no user found"));
+  }
+
+  res.json({ users });
+});
+
+module.exports = { login, register, getAllUsers };

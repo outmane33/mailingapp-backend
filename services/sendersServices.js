@@ -25,6 +25,26 @@ const getAllSenders = expressAsyncHandler(async function (req, res) {
   res.status(200).json({ emails });
 });
 
+const getAllSendersCount = expressAsyncHandler(async function (req, res) {
+  try {
+    const gmailCount = await SenderGmail.countDocuments();
+    const outlookCount = await SenderOutlook.countDocuments();
+    const totalCount = gmailCount + outlookCount;
+
+    res.status(200).json({
+      counts: {
+        gmail: gmailCount,
+        outlook: outlookCount,
+        total: totalCount,
+      },
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({ message: "Error fetching sender counts", error: error.message });
+  }
+});
+
 // ADD Data
 const addData = expressAsyncHandler(async function (req, res, next) {
   const { isp } = req.params;
@@ -68,16 +88,6 @@ const addData = expressAsyncHandler(async function (req, res, next) {
     return next(new ApiError("Invalid dataType provided"));
   }
 });
-
-//get the curent id of gmail senders
-const getNextSequenceValue = async (sequenceName, Model) => {
-  const sequenceDocument = await Model.findOneAndUpdate(
-    { _id: sequenceName },
-    { $inc: { sequence_value: 1 } },
-    { new: true, upsert: true }
-  );
-  return sequenceDocument.sequence_value;
-};
 
 //add senders
 const addSendersFunc = async function (req, res, Model) {
@@ -132,9 +142,6 @@ const addRecipienteFunc = async function (req, res, Model) {
     for (const email of emails) {
       const trimmedEmail = email.trim(); // Trim each email
 
-      // Get the next auto-incremented id
-      // const nextId = await getNextSequenceValue("senderId", senderCounter);
-
       // Prepare bulk update operation with upsert
       bulkOps.push({
         updateOne: {
@@ -179,4 +186,4 @@ const getAllData = expressAsyncHandler(async function addUsers(req, res) {
   res.json({ data: myDataNames });
 });
 
-module.exports = { getAllSenders, addData, getAllData };
+module.exports = { getAllSenders, addData, getAllData, getAllSendersCount };

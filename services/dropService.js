@@ -30,8 +30,35 @@ const getAllDrops = expressAsyncHandler(async function (req, res) {
   if (req.query.status) {
     filter.status = req.query.status;
   }
+  if (req.query.startFrom) {
+    filter.startFrom = req.query.startFrom;
+  }
+  if (req.query.total) {
+    filter.total = req.query.total;
+  }
+  if (req.query.lastStartIndex) {
+    filter.lastStartIndex = req.query.lastStartIndex;
+  }
+  if (req.query.opens) {
+    filter.opens = req.query.opens;
+  }
+  if (req.query.clicks) {
+    filter.clicks = req.query.clicks;
+  }
+  if (req.query.leads) {
+    filter.leads = req.query.leads;
+  }
+  if (req.query.unsubs) {
+    filter.unsubs = req.query.unsubs;
+  }
   if (req.query.campaignName) {
     filter.campaignName = { $regex: req.query.campaignName, $options: "i" }; // case-insensitive
+  }
+  if (req.query.mailer) {
+    filter.mailer = { $regex: req.query.mailer, $options: "i" }; // case-insensitive
+  }
+  if (req.query.offer) {
+    filter.offer = { $regex: req.query.offer, $options: "i" }; // case-insensitive
   }
   if (req.query.isp) {
     filter.isp = req.query.isp;
@@ -59,4 +86,164 @@ const getAllDrops = expressAsyncHandler(async function (req, res) {
   });
 });
 
-module.exports = { getDropByCampaignName, getAllDrops };
+//get all drops count for today
+const getCountDropsToday = expressAsyncHandler(async function (req, res) {
+  try {
+    // Get the start and end of today in the server's timezone
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    // Count documents created between start of today and start of tomorrow
+    const count = await Drop.countDocuments({
+      createdAt: {
+        $gte: today,
+        $lt: tomorrow,
+      },
+    });
+
+    res.status(200).json({ count });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error fetching today's drop count",
+      error: error.message,
+    });
+  }
+});
+
+//get lastStartIndex for today
+const getDailyDelivred = expressAsyncHandler(async function (req, res) {
+  try {
+    // Get the start and end of today in the server's timezone
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    // Use aggregation to sum lastStartIndex for documents created today
+    const result = await Drop.aggregate([
+      {
+        $match: {
+          createdAt: {
+            $gte: today,
+            $lt: tomorrow,
+          },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalLastStartIndex: { $sum: "$lastStartIndex" },
+        },
+      },
+    ]);
+
+    // Check if there are any results
+    const totalLastStartIndex =
+      result.length > 0 ? result[0].totalLastStartIndex : 0;
+
+    res.status(200).json({ totalLastStartIndex });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error calculating total lastStartIndex",
+      error: error.message,
+    });
+  }
+});
+
+//daily clicks
+const getDailyClicks = expressAsyncHandler(async function (req, res) {
+  try {
+    // Get the start and end of today in the server's timezone
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    // Use aggregation to sum clicks for documents created today
+    const result = await Drop.aggregate([
+      {
+        $match: {
+          createdAt: {
+            $gte: today,
+            $lt: tomorrow,
+          },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalClicks: { $sum: "$clicks" },
+        },
+      },
+    ]);
+
+    // Check if there are any results
+    const totalClicks = result.length > 0 ? result[0].totalClicks : 0;
+
+    res.status(200).json({ totalClicks });
+  } catch (error) {
+    res.status(500).json({
+      message: "Error calculating total clicks",
+      error: error.message,
+    });
+  }
+});
+
+//monthly clicks
+const getMonthlyClicks = expressAsyncHandler(async function (req, res) {
+  try {
+    // Get the start of the current month
+    const startOfMonth = new Date();
+    startOfMonth.setDate(1);
+    startOfMonth.setHours(0, 0, 0, 0);
+
+    // Get the start of the next month
+    const startOfNextMonth = new Date(startOfMonth);
+    startOfNextMonth.setMonth(startOfNextMonth.getMonth() + 1);
+
+    // Use aggregation to sum clicks for documents created this month
+    const result = await Drop.aggregate([
+      {
+        $match: {
+          createdAt: {
+            $gte: startOfMonth,
+            $lt: startOfNextMonth,
+          },
+        },
+      },
+      {
+        $group: {
+          _id: null,
+          totalClicks: { $sum: "$clicks" },
+        },
+      },
+    ]);
+
+    // Check if there are any results
+    const totalClicks = result.length > 0 ? result[0].totalClicks : 0;
+
+    res.status(200).json({
+      totalClicks,
+      month: startOfMonth.toLocaleString("default", { month: "long" }),
+      year: startOfMonth.getFullYear(),
+    });
+  } catch (error) {
+    res
+      .status(500)
+      .json({
+        message: "Error calculating total clicks for the month",
+        error: error.message,
+      });
+  }
+});
+
+module.exports = {
+  getDropByCampaignName,
+  getAllDrops,
+  getCountDropsToday,
+  getDailyDelivred,
+  getDailyClicks,
+  getMonthlyClicks,
+};

@@ -127,6 +127,14 @@ const dropShema = new shema(
       type: Number,
       required: true, // Set to true or false depending on your needs
     },
+    mailer: {
+      type: String,
+      required: true,
+    },
+    offer: {
+      type: String,
+      required: true,
+    },
     // email_lists: {
     //   type: String,
     //   require: [true, "email_list_filters required"],
@@ -193,6 +201,22 @@ const dropShema = new shema(
     },
     xFeedbackId: {
       type: String,
+    },
+    opens: {
+      type: Number,
+      default: 0, // Default value for opens
+    },
+    clicks: {
+      type: Number,
+      default: 0, // Default value for clicks
+    },
+    leads: {
+      type: Number,
+      default: 0, // Default value for clicks
+    },
+    unsubs: {
+      type: Number,
+      default: 0, // Default value for clicks
     },
     listUnsubscribe: {
       type: String,

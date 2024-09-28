@@ -49,4 +49,102 @@ const getDataByISP = expressAsyncHandler(async function (req, res, next) {
   }
 });
 
-module.exports = { getDataByISP };
+// Get all data info
+const getAllData = expressAsyncHandler(async function (req, res, next) {
+  try {
+    const {
+      data_provider,
+      Name,
+      Total_Count,
+      Updated_At,
+      Created_Date,
+      page = 1,
+      limit = 5,
+    } = req.query;
+
+    const skip = (page - 1) * limit;
+    const allData = {};
+    let totalItems = 0;
+
+    for (const [modelName, Model] of Object.entries(models)) {
+      // Prepare filter for aggregation
+      let matchStage = {};
+      if (data_provider) matchStage.data_provider = data_provider;
+      if (Updated_At) matchStage.updatedAt = { $gte: new Date(Updated_At) };
+      if (Created_Date) matchStage.createdAt = { $gte: new Date(Created_Date) };
+
+      // Group by data_provider and count documents
+      const countsByProvider = await Model.aggregate([
+        { $match: matchStage },
+        {
+          $group: {
+            _id: "$data_provider",
+            count: { $sum: 1 },
+            latestCreatedAt: { $max: "$createdAt" },
+            latestUpdate: { $max: "$updatedAt" },
+          },
+        },
+        { $sort: { latestCreatedAt: -1 } },
+      ]);
+
+      // Transform and filter the results
+      countsByProvider.forEach((provider) => {
+        const providerName = provider._id || "Unknown";
+        const entry = {
+          DataProvider: providerName,
+          Name: modelName,
+          Total_Count: provider.count,
+          Updated_At: provider.latestUpdate
+            ? provider.latestUpdate.toISOString()
+            : "N/A",
+          Created_Date: provider.latestCreatedAt
+            ? provider.latestCreatedAt.toISOString()
+            : "N/A",
+        };
+
+        // Apply filters
+        if (
+          (!Name || modelName.includes(Name)) &&
+          (!Total_Count || provider.count >= parseInt(Total_Count))
+        ) {
+          allData[`${modelName}_${providerName}`] = entry;
+          totalItems++;
+        }
+      });
+
+      // If no documents exist for this model, add an entry with zero count
+      if (
+        countsByProvider.length === 0 &&
+        (!Name || modelName.includes(Name))
+      ) {
+        allData[modelName] = {
+          DataProvider: "N/A",
+          Name: modelName,
+          Total_Count: 0,
+          Updated_At: "N/A",
+          Created_Date: "N/A",
+        };
+        totalItems++;
+      }
+    }
+
+    // Apply pagination
+    const paginatedData = Object.fromEntries(
+      Object.entries(allData).slice(skip, skip + parseInt(limit))
+    );
+
+    res.status(200).json({
+      success: true,
+      data: paginatedData,
+      pagination: {
+        totalItems,
+        itemsPerPage: parseInt(limit),
+        currentPage: parseInt(page),
+        totalPages: Math.ceil(totalItems / limit),
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+});
+module.exports = { getDataByISP, getAllData };

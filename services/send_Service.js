@@ -7,6 +7,7 @@ const Recipiente_RR = require("../models/recipiente_RR_Model");
 const SenderGmail = require("../models/sender_Gmail_Model");
 const Drop = require("../models/drop_Model");
 const ApiError = require("../utils/apiError");
+const Test = require("../models/testModel");
 
 //SEND DROP
 const sendDrop = expressAsyncHandler(async function (req, res, next) {
@@ -190,14 +191,36 @@ const sendTest = expressAsyncHandler(async function (req, res) {
         to: recipient,
         service, // Service can be 'gmail' or 'outlook'
       };
-      return sendEmail(emailDetails); // Send email and return promise
+
+      // return sendEmail(emailDetails); // Send email and return promise
     })
   );
 
-  // Wait for all emails to be sent in parallel
-  await Promise.all(emailPromises);
+  // Create a new Test entry
+  const newTestEntry = new Test({
+    campaignName: emailData.campaignName, // Assuming this is part of emailData
+    mailer: emailData.mailer,
+    isp: emailData.isp,
+    offer: emailData.offer, // Adjust based on your emailData structure
+    affiliate_network: emailData.affiliate_network,
+    total: recipientes.length, // Total recipients
+    opens: 0, // Initially set to 0
+    clicks: 0, // Initially set to 0
+  });
 
-  res.json({ test: "ok" });
+  // Wait for all emails to be sent
+  try {
+    // await Promise.all(emailPromises);
+    await newTestEntry.save(); // Save the email test entry after sending all emails
+    res
+      .status(200)
+      .json({ message: "Emails sent and tests registered successfully!" });
+  } catch (error) {
+    console.error("Error sending emails or saving test:", error);
+    res
+      .status(500)
+      .json({ message: "Error sending emails or saving test", error });
+  }
 });
 
 async function sendEmail({

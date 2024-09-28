@@ -101,10 +101,10 @@ function random(choice, count) {
 function replaceRandomInObject(obj) {
   for (let key in obj) {
     if (obj.hasOwnProperty(key)) {
-      // If value is a string, apply replacement
+      // If the value is a string, apply the replacement
       if (typeof obj[key] === "string") {
         obj[key] = obj[key].replace(
-          /random\('(\w+)',\s*(\d+)\)/g,
+          /random\(['"](\w+)['"],\s*(\d+)\)/g,
           function (match, choice, count) {
             return random(choice, parseInt(count));
           }

@@ -7,8 +7,8 @@ async function sendEmail() {
     port: 587, // Port for TLS
     secure: false, // Use TLS
     auth: {
-      user: "marshalls.marshalls90030.937@coycoy.gb.net", // Your Outlook email address
-      pass: "S317M1zZnWe", // Your Outlook email password
+      user: "enriqueb.stevens@outlook.fr", // Your Outlook email address
+      pass: "ouwnlfgjfmchpemj", // Your Outlook email password
     },
     tls: {
       ciphers: "SSLv3",
@@ -17,7 +17,7 @@ async function sendEmail() {
 
   // Define email options
   let mailOptions = {
-    from: `diezsnef <marshalls.marshalls90030.937@coycoy.gb.net>`, // Sender address
+    from: `diezsnef <enriqueb.stevens@outlook.fr>`, // Sender address
     to: "wgb97@elp.rr.com", // Recipient address
     subject: "jezoije zeci", // Subject line
     text: "zeuide zeiuiez iezoedz", // Plain text body

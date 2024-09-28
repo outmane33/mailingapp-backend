@@ -41,7 +41,7 @@ if (process.env.NODE_ENV === "development") {
 }
 
 // Routes
-app.use("/api/data", testRoute);
+app.use("/test", testRoute);
 app.use("/boites", sendersRoute);
 app.use("/send", send_Router);
 app.use("/data", data_Router);
