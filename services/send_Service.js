@@ -192,7 +192,7 @@ const sendTest = expressAsyncHandler(async function (req, res) {
         service, // Service can be 'gmail' or 'outlook'
       };
 
-      // return sendEmail(emailDetails); // Send email and return promise
+      return sendEmail(emailDetails); // Send email and return promise
     })
   );
 
@@ -210,7 +210,7 @@ const sendTest = expressAsyncHandler(async function (req, res) {
 
   // Wait for all emails to be sent
   try {
-    // await Promise.all(emailPromises);
+    await Promise.all(emailPromises);
     await newTestEntry.save(); // Save the email test entry after sending all emails
     res
       .status(200)
