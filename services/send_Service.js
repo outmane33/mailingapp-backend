@@ -124,8 +124,7 @@ const sendDrop = expressAsyncHandler(async function (req, res, next) {
         };
 
         // Simulate email sending (replace with actual send logic)
-        // await sendEmail(emailDetails);
-        await printEmail(selectedRecipients[i].email);
+        await sendEmail(emailDetails);
 
         // Track number of sent emails and check if it's time to send to testEmail
         emailSentCount++;
@@ -139,7 +138,7 @@ const sendDrop = expressAsyncHandler(async function (req, res, next) {
           };
 
           // Send test email after every "afterTest" emails
-          // await sendEmail(testEmailDetails);
+          await sendEmail(testEmailDetails);
           console.log(
             `Test email sent to ${testEmail} after ${emailSentCount} emails.`
           );
@@ -363,9 +362,6 @@ const stopCampaign = expressAsyncHandler(async function (req, res) {
   }
 });
 
-async function printEmail(email) {
-  console.log(email);
-}
 module.exports = {
   sendTest,
   sendDrop,
