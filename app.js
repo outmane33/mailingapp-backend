@@ -25,7 +25,11 @@ dbConnection();
 //   methods: ["GET", "POST", "PUT", "DELETE"], // Allowed methods
 //   allowedHeaders: ["Content-Type", "Authorization"], // Allowed headers
 // }
-app.use(cors());
+app.use(
+  cors({
+    origin: process.env.ORIGIN,
+  })
+);
 // Compress all responses
 const compression = require("compression");
 app.use(compression());
